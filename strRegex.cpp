@@ -564,7 +564,7 @@ void genAssignUnrollReg(Z3_theory t, std::set<Z3_ast> & unrolls) {
 
     int low = -1;
     int high = -1;
-    Z3_theory_get_bound_strlen(t, cntInUnr, low, high);
+    Z3_theory_get_bound_strlen(t, cntInUnr, &low, &high);
 
 #ifdef DEBUGLOG
     __debugPrint(logFile, ">> genAssignUnrollReg: \n");

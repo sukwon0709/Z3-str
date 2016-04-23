@@ -1,6 +1,6 @@
 #include "strTheory.h"
 
-std::string inputFile;
+extern std::string inputFile;
 
 int main(int argc, char ** argv)
 {

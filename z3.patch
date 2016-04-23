@@ -16,7 +16,7 @@ diff -rupN lib/api_user_theory.cpp ../../../myStrTheory/z3_src_4.1.1/lib/api_use
 +      Z3_CATCH_RETURN(0);
 +    }
 +
-+    int Z3_theory_get_bound_strlen(Z3_theory t, Z3_ast n, int & lb, int  & ub) {
++    int Z3_theory_get_bound_strlen(Z3_theory t, Z3_ast n, int* lb, int* ub) {
 +      Z3_context c = Z3_theory_get_context(t);
 +      Z3_TRY;
 +      RESET_ERROR_CODE();
@@ -237,9 +237,9 @@ diff -rupN lib/user_smt_theory.cpp ../../../myStrTheory/z3_src_4.1.1/lib/user_sm
 +    // x = y . r1   V   x = m . r1 /\ y = m . r2
 +    // x . b = y . a => r1 . b = r2 . a
 +
-+    int user_theory::get_bound_strlen(ast * n, int & lb, int & ub) const {
-+      lb = -1;
-+      ub = -1;
++    int user_theory::get_bound_strlen(ast * n, int* lb, int* ub) const {
++      *lb = -1;
++      *ub = -1;
 +
 +      if (!is_app(n))
 +        return 0;
@@ -270,12 +270,12 @@ diff -rupN lib/user_smt_theory.cpp ../../../myStrTheory/z3_src_4.1.1/lib/user_sm
 +          theory_mi_arith::bound * b1 = ta1->lower(r);
 +          if (b1) {
 +            inf_rational i = b1->get_value();
-+            lb = i.get_int64();
++            *lb = i.get_int64();
 +          }
 +          theory_mi_arith::bound * b2 = ta1->upper(r);
 +          if (b2) {
 +            inf_rational i = b2->get_value();
-+            ub = i.get_int64();
++            *ub = i.get_int64();
 +          }
 +          return 1;
 +        }
@@ -428,7 +428,7 @@ diff -rupN lib/z3_api.h ../../../myStrTheory/z3_src_4.1.1/lib/z3_api.h
 +    /**
 +       \brief Return the arithmetic bound of \c n.
 +    */
-+    int Z3_API Z3_theory_get_bound_strlen(__in Z3_theory t, __in Z3_ast n, __out int & lb, __out int & ub );
++    int Z3_API Z3_theory_get_bound_strlen(__in Z3_theory t, __in Z3_ast n, __out int* lb, __out int* ub );
 +
 +    void Z3_theory_set_arith_new_eq_cb(Z3_theory t, Z3_theory_ast_ast_callback_fptr fptr);
 +
