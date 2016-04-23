@@ -111,7 +111,7 @@ typedef enum
 //--------------------------------------------------
 // Function Declaration
 //--------------------------------------------------
-void setAlphabet();
+extern "C" void setAlphabet();
 
 std::string intToString(int i);
 

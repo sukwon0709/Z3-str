@@ -6101,6 +6101,9 @@ int check(Z3_theory t) {
 /*
  *Procedural attachment theory example.
  */
+static PATheoryData *the_td;
+static Z3_theory the_th;
+
 Z3_theory mk_pa_theory(Z3_context ctx) {
   PATheoryData * td = (PATheoryData *) malloc(sizeof(PATheoryData));
   Z3_theory Th = Z3_mk_theory(ctx, "StringAttachment", td);
@@ -6248,6 +6251,8 @@ Z3_theory mk_pa_theory(Z3_context ctx) {
   Z3_set_reduce_eq_callback(Th, cb_reduce_eq);
   Z3_set_reduce_app_callback(Th, cb_reduce_app);
 
+  the_td = td;
+
   return Th;
 }
 
@@ -6283,88 +6288,161 @@ Z3_context mk_my_context() {
  * C extensions
  */
 extern "C" {
-    Z3_context mk_string_context() {
+    Z3_context z3str_mk_context() {
         Z3_context ctx = mk_my_context();
+        Z3_theory Th = mk_pa_theory(ctx);
+        ctx = Z3_theory_get_context(Th);
+
+        if (!the_th) {
+            the_th = Th;
+        }
+
+        emptyConstStr = my_mk_str_value(Th, "");
+
         return ctx;
     }
 
-    Z3_theory mk_string_theory(Z3_context ctx) {
-        Z3_theory t = mk_pa_theory(ctx);
-        return t;
+    Z3_sort z3str_mk_string_sort() {
+        if (!the_td) z3str_mk_context();
+        return the_td->String;
     }
 
-    Z3_sort mk_string_sort(Z3_theory t) {
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return td->String;
+    Z3_ast z3str_string_concat(Z3_ast s1, Z3_ast s2) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_2_arg_app(ctx, the_td->Concat, s1, s2);
     }
 
-    Z3_ast string_concat(Z3_theory t, Z3_ast s1, Z3_ast s2) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_2_arg_app(ctx, td->Concat, s1, s2);
+    Z3_ast z3str_string_length(Z3_ast s) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_1_arg_app(ctx, the_td->Length, s);
     }
 
-    Z3_ast string_length(Z3_theory t, Z3_ast s) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_1_arg_app(ctx, td->Length, s);
-    }
-
-    Z3_ast string_substr(Z3_theory t, Z3_ast s, Z3_ast pos, Z3_ast len) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
+    Z3_ast z3str_string_substr(Z3_ast s, Z3_ast pos, Z3_ast len) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
         Z3_ast args[3] = { s, pos, len };
-        return Z3_mk_app(ctx, td->SubString, 3, args);
+        return Z3_mk_app(ctx, the_td->SubString, 3, args);
     }
 
-    Z3_ast string_indexof(Z3_theory t, Z3_ast s1, Z3_ast s2) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_2_arg_app(ctx, td->Indexof, s1, s2);
+    Z3_ast z3str_string_indexof(Z3_ast s1, Z3_ast s2) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_2_arg_app(ctx, the_td->Indexof, s1, s2);
     }
 
-    Z3_ast string_indexof2(Z3_theory t, Z3_ast s1, Z3_ast s2, Z3_ast pos) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
+    Z3_ast z3str_string_indexof2(Z3_ast s1, Z3_ast s2, Z3_ast pos) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
         Z3_ast args[3] = { s1, s2, pos };
-        return Z3_mk_app(ctx, td->Indexof2, 3, args);
+        return Z3_mk_app(ctx, the_td->Indexof2, 3, args);
     }
 
-    Z3_ast string_contains(Z3_theory t, Z3_ast s1, Z3_ast s2) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_2_arg_app(ctx, td->Contains, s1, s2);
+    Z3_ast z3str_string_contains(Z3_ast s1, Z3_ast s2) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_2_arg_app(ctx, the_td->Contains, s1, s2);
     }
 
-    Z3_ast string_startswith(Z3_theory t, Z3_ast s1, Z3_ast s2) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_2_arg_app(ctx, td->StartsWith, s1, s2);
+    Z3_ast z3str_string_startswith(Z3_ast s1, Z3_ast s2) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_2_arg_app(ctx, the_td->StartsWith, s1, s2);
     }
 
-    Z3_ast string_endswith(Z3_theory t, Z3_ast s1, Z3_ast s2) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_2_arg_app(ctx, td->EndsWith, s1, s2);
+    Z3_ast z3str_string_endswith(Z3_ast s1, Z3_ast s2) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_2_arg_app(ctx, the_td->EndsWith, s1, s2);
     }
 
-    Z3_ast string_replace(Z3_theory t, Z3_ast s1, Z3_ast s2, Z3_ast s3) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
+    Z3_ast z3str_string_replace(Z3_ast s1, Z3_ast s2, Z3_ast s3) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
         Z3_ast args[3] = { s1, s2, s3 };
-        return Z3_mk_app(ctx, td->Replace, 3, args);
+        return Z3_mk_app(ctx, the_td->Replace, 3, args);
     }
 
-    Z3_ast string_lastindexof(Z3_theory t, Z3_ast s1, Z3_ast s2) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_2_arg_app(ctx, td->LastIndexof, s1, s2);
+    Z3_ast z3str_string_lastindexof(Z3_ast s1, Z3_ast s2) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_2_arg_app(ctx, the_td->LastIndexof, s1, s2);
     }
 
-    Z3_ast string_charat(Z3_theory t, Z3_ast s, Z3_ast pos) {
-        Z3_context ctx = Z3_theory_get_context(t);
-        PATheoryData* td = (PATheoryData *) Z3_theory_get_ext_data(t);
-        return mk_2_arg_app(ctx, td->CharAt, s, pos);
+    Z3_ast z3str_string_charat(Z3_ast s, Z3_ast pos) {
+        if (!the_td) z3str_mk_context();
+        Z3_context ctx = Z3_theory_get_context(the_th);
+        return mk_2_arg_app(ctx, the_td->CharAt, s, pos);
+    }
+
+    void z3str_register_vars(Z3_ast node) {
+        if (!the_td) z3str_mk_context();
+        checkInputVar(the_th, node);
+    }
+
+    void z3str_basic_str_var_axioms() {
+        if (!the_td) z3str_mk_context();
+        for (std::map<Z3_ast, int>::iterator it = inputVarMap.begin(); it != inputVarMap.end(); it++) {
+            basicStrVarAxiom(the_th, it->first, __LINE__);
+        }
+    }
+}
+
+extern "C" {
+    Z3_func_decl z3str_concat_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->Concat;
+    }
+
+    Z3_func_decl z3str_length_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->Length;
+    }
+
+    Z3_func_decl z3str_substring_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->SubString;
+    }
+
+    Z3_func_decl z3str_indexof_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->Indexof;
+    }
+
+    Z3_func_decl z3str_indexof2_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->Indexof2;
+    }
+
+    Z3_func_decl z3str_contains_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->Contains;
+    }
+
+    Z3_func_decl z3str_startswith_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->StartsWith;
+    }
+
+    Z3_func_decl z3str_endswith_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->EndsWith;
+    }
+
+    Z3_func_decl z3str_replace_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->Replace;
+    }
+
+    Z3_func_decl z3str_lastindexof_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->LastIndexof;
+    }
+
+    Z3_func_decl z3str_charat_decl() {
+        if (!the_td) z3str_mk_context();
+        return the_td->CharAt;
     }
 }
 

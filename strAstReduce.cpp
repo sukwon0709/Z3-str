@@ -94,6 +94,61 @@ void setAlphabet() {
   }
 }
 
+extern "C"
+void setAlphabet7bit() {
+    charSetSize = 128;
+    charSet = new char[charSetSize];
+    int idx = 0;
+    // small letters
+    for (int i = 97; i < 123; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    // caps
+    for (int i = 65; i < 91; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    // numbers
+    for (int i = 48; i < 58; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    // printable marks - 1
+    for (int i = 32; i < 48; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    // printable marks - 2
+    for (int i = 58; i < 65; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    // printable marks - 3
+    for (int i = 91; i < 97; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    // printable marks - 4
+    for (int i = 123; i < 128; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    // non-printable - 1
+    for (int i = 0; i < 32; i++) {
+      charSet[idx] = (char) i;
+      charSetLookupTable[charSet[idx]] = 1;
+      idx++;
+    }
+    assert(idx == charSetSize);
+}
 
 
 /****************************************
