@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 Z3_context z3str_mk_context();
+Z3_theory z3str_get_theory();
 void setAlphabet();
 
 Z3_sort z3str_mk_string_sort();

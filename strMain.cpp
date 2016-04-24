@@ -55,7 +55,8 @@ int main(int argc, char ** argv)
     __debugPrint(logFile, "Input file: %s\n\n", inputFile.c_str());
 #endif
 
-    pa_theory_example();
+    //pa_theory_example();
+    pa_theory_example2();
 
 #ifdef DEBUGLOG
     fclose(logFile);

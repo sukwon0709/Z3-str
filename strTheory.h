@@ -314,6 +314,8 @@ void checkContainInNewEq(Z3_theory t, Z3_ast n1, Z3_ast n2);
 
 void pa_theory_example();
 
+void pa_theory_example2();
+
 bool consistCheckRegex(Z3_theory t, Z3_ast nn1, Z3_ast nn2);
 
 void get_eqc_simpleUnroll(Z3_theory t, Z3_ast n, Z3_ast & constStr, std::set<Z3_ast> & unrollFuncSet);

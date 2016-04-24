@@ -4601,7 +4601,7 @@ void processFreeVar(Z3_theory t, std::map<Z3_ast, int> & freeVar_map) {
       int lenValue = getLenValue(t, *itor1);
       int low = -1;
       int high = -1;
-      Z3_theory_get_bound_strlen(t, getLengthAST(t, *itor1), low, high);
+      Z3_theory_get_bound_strlen(t, getLengthAST(t, *itor1), &low, &high);
       __debugPrint(logFile, "   ");
       printZ3Node(t, *itor1);
       __debugPrint(logFile, "\t[Length = %d (%d, %d)]\n", lenValue, low, high);
@@ -4620,7 +4620,7 @@ void processFreeVar(Z3_theory t, std::map<Z3_ast, int> & freeVar_map) {
         int lenValue = getLenValue(t, *itor2);
         int low = -1;
         int high = -1;
-        Z3_theory_get_bound_strlen(t, getLengthAST(t, *itor2), low, high);
+        Z3_theory_get_bound_strlen(t, getLengthAST(t, *itor2), &low, &high);
         __debugPrint(logFile, "     ");
         printZ3Node(t, *itor2);
         __debugPrint(logFile, "\t[Length = %d (%d, %d)]\n", lenValue, low, high);
@@ -4795,7 +4795,7 @@ Z3_bool cb_final_check(Z3_theory t) {
       int lenValue = getLenValue(t, freeVar);
       low = -1;
       high = -1;
-      Z3_theory_get_bound_strlen(t, getLengthAST(t, freeVar), low, high);
+      Z3_theory_get_bound_strlen(t, getLengthAST(t, freeVar), &low, &high);
       __debugPrint(logFile, "   ");
       printZ3Node(t, freeVar);
       __debugPrint(logFile, "\t[depCnt = %d, Length = %d (%d, %d)]\n", freeVarItor1->second, lenValue, low, high);
@@ -4814,7 +4814,7 @@ Z3_bool cb_final_check(Z3_theory t) {
       int lenValue = getLenValue(t, freeVar);
       low = -1;
       high = -1;
-      Z3_theory_get_bound_strlen(t, getLengthAST(t, freeVar), low, high);
+      Z3_theory_get_bound_strlen(t, getLengthAST(t, freeVar), &low, &high);
       __debugPrint(logFile, "   ");
       printZ3Node(t, freeVar);
       __debugPrint(logFile, "\t[Length = %d (%d, %d)]\n", lenValue, low, high);
@@ -6101,8 +6101,8 @@ int check(Z3_theory t) {
 /*
  *Procedural attachment theory example.
  */
-static PATheoryData *the_td;
-static Z3_theory the_th;
+static PATheoryData *the_td = 0;
+static Z3_theory the_th = 0;
 
 Z3_theory mk_pa_theory(Z3_context ctx) {
   PATheoryData * td = (PATheoryData *) malloc(sizeof(PATheoryData));
@@ -6302,6 +6302,10 @@ extern "C" {
         return ctx;
     }
 
+    Z3_theory z3str_get_theory() {
+        return the_th;
+    }
+
     Z3_sort z3str_mk_string_sort() {
         if (!the_td) z3str_mk_context();
         return the_td->String;
@@ -6483,6 +6487,43 @@ void pa_theory_example() {
 
   Z3_assert_cnstr(ctx, fs);
   check(Th);
+
+  // clean up
+  Z3_del_context(ctx);
+}
+
+void pa_theory_example2() {
+  if (inputFile == "") {
+    printf("No input file is provided.\n");
+    return;
+  }
+  Z3_context ctx = z3str_mk_context();
+  setAlphabet();
+
+  // load cstr from inputFile
+  Z3_ast fs = Z3_parse_smtlib2_file(ctx, inputFile.c_str(), 0, 0, 0, 0, 0, 0);
+
+  // check input variable. Stop if invalid stuffs are found
+  checkInputVar(the_th, fs);
+
+  emptyConstStr = my_mk_str_value(the_th, "");
+
+  __debugPrint(logFile, "Input Var Set\n***********************************************\n");
+  for (std::map<Z3_ast, int>::iterator it = inputVarMap.begin(); it != inputVarMap.end(); it++) {
+    printZ3Node(the_th, it->first);
+    __debugPrint(logFile, "\n");
+    basicStrVarAxiom(the_th, it->first, __LINE__);
+  }
+  __debugPrint(logFile, "\n\n");
+
+#ifdef DEBUGLOG
+  __debugPrint(logFile, "\n***********************************************\nInput loaded:\n-----------------------------------------------\n");
+  printZ3Node(the_th, fs);
+  __debugPrint(logFile, "\n-----------------------------------------------\n\n");
+#endif
+
+  Z3_assert_cnstr(ctx, fs);
+  check(the_th);
 
   // clean up
   Z3_del_context(ctx);
